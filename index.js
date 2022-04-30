@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
@@ -19,11 +19,39 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+    const serviceCollection = client.db("groceryStock").collection("service");
+
     app.get("/service", async (req, res) => {
-      const serviceCollection = client.db("groceryStock").collection("service");
       const query = {};
       const cursor = serviceCollection.find(query);
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/service/:id", async (req, res) => {
+      const serviceCollection = client.db("groceryStock").collection("service");
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const service = await serviceCollection.findOne(query);
+      res.send(service);
+    });
+
+    // update quantity
+    app.put("/service/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedService = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          quantity: updatedService.quantity,
+        },
+      };
+      const result = await serviceCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
       res.send(result);
     });
   } finally {
