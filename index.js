@@ -29,11 +29,17 @@ async function run() {
     });
 
     app.get("/service/:id", async (req, res) => {
-      const serviceCollection = client.db("groceryStock").collection("service");
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const service = await serviceCollection.findOne(query);
       res.send(service);
+    });
+    app.get("/myservice", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const cursor = serviceCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     app.post("/service", async (req, res) => {
